@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:weather_app/screens/today_screen/app_bar.dart';
 
+import 'column_view.dart';
+
 class TodayScreen extends StatelessWidget {
   const TodayScreen({Key? key}) : super(key: key);
 
@@ -11,6 +13,7 @@ class TodayScreen extends StatelessWidget {
         preferredSize: Size.fromHeight(70),
         child: TodayAppBar(),
       ),
+      body: ColumnView(),
     );
   }
 }
