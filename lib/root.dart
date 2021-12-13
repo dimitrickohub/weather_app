@@ -14,9 +14,11 @@ class _RootAppState extends State<RootApp> {
   int activeTab = 0;
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      bottomNavigationBar: getFooter(),
-      body: getBody(),
+    return SafeArea(
+      child: Scaffold(
+        bottomNavigationBar: getFooter(),
+        body: getBody(),
+      ),
     );
   }
 
