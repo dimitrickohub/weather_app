@@ -1,71 +1,53 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:weather_app/screens/forecast_screen.dart';
-import 'package:weather_app/screens/today_screen/today_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:weather_app/screens/forecast_screen/forecast_view.dart';
+import 'package:weather_app/screens/today_screen/today_view.dart';
 
-class RootApp extends StatefulWidget {
+import 'bloc/root_bloc/root_bloc.dart';
+
+class RootApp extends StatelessWidget {
   const RootApp({Key? key}) : super(key: key);
-
-  @override
-  _RootAppState createState() => _RootAppState();
-}
-
-class _RootAppState extends State<RootApp> {
-  int activeTab = 0;
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        bottomNavigationBar: getFooter(),
-        body: getBody(),
+    return Scaffold(
+      body: BlocBuilder<RootBloc, RootState>(
+        builder: (BuildContext context, RootState state) {
+          if (state is PageLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (state is LoadedTodayState) {
+            return TodayView(snapshot: state.weather);
+          }
+          if (state is LoadedForecastState) {
+            return ForecastView(snapshot: state.weather);
+          }
+          return const Center(
+              child: Text(
+            'Something went wrong',
+            style: TextStyle(
+                color: Colors.red, fontSize: 25, fontWeight: FontWeight.w500),
+          ));
+        },
       ),
-    );
-  }
-
-  Widget getBody() {
-    return IndexedStack(
-      index: activeTab,
-      children: const [
-        TodayScreen(),
-        ForecastScreen(),
-      ],
-    );
-  }
-
-  Widget getFooter() {
-    List items = [
-      CupertinoIcons.sun_max,
-      CupertinoIcons.cloud_sun,
-    ];
-
-    return Container(
-      alignment: Alignment.center,
-      height: 70,
-      decoration: BoxDecoration(border: Border.all(color: Colors.black12)),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(
-          items.length,
-          (index) {
-            return Expanded(
-              flex: 2,
-              child: IconButton(
-                iconSize: 35,
-                icon: Icon(items[index],
-                    color: activeTab == index ? Colors.blue : Colors.black),
-                onPressed: () {
-                  setState(
-                    () {
-                      activeTab = index;
-                    },
-                  );
-                },
-              ),
-            );
-          },
-        ),
-      ),
+      bottomNavigationBar: BlocBuilder<RootBloc, RootState>(
+          builder: (BuildContext context, RootState state) {
+        return BottomNavigationBar(
+          currentIndex: context.select((RootBloc bloc) => bloc.currentIndex),
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.sun_max, color: Colors.black),
+              label: 'Today',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(CupertinoIcons.cloud_sun, color: Colors.black),
+              label: 'Forecast',
+            ),
+          ],
+          onTap: (index) =>
+              context.read<RootBloc>().add(PageTapped(index: index)),
+        );
+      }),
     );
   }
 }
