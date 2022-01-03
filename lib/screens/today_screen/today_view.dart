@@ -44,7 +44,7 @@ class _TodayViewState extends State<TodayView> {
     String windDegree = widget.snapshot.windDegree.toString();
     return Scaffold(
       appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(70),
+        preferredSize: Size.fromHeight(60),
         child: TodayAppBar(),
       ),
       body: Center(

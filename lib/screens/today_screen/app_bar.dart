@@ -31,15 +31,13 @@ class TodayAppBar extends StatelessWidget {
             height: 4.0,
           ),
           preferredSize: const Size.fromHeight(4.0)),
-      title: const SafeArea(
-        child: Center(
-          child: Text(
-            _kToday,
-            style: TextStyle(
-              fontSize: 20,
-              color: Colors.black,
-              fontWeight: FontWeight.normal,
-            ),
+      title: const Center(
+        child: Text(
+          _kToday,
+          style: TextStyle(
+            fontSize: 20,
+            color: Colors.black,
+            fontWeight: FontWeight.normal,
           ),
         ),
       ),
