@@ -1,277 +1,261 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
+
 import 'package:intl/intl.dart';
 import 'package:weather/weather.dart';
-
-const String _kKye = '286bcef11450bc68f75fb791713f7be2';
+import 'package:weather_app/screens/today_screen/app_bar.dart';
 
 class TodayView extends StatefulWidget {
-  const TodayView({Key? key}) : super(key: key);
-
+  const TodayView({Key? key, required this.snapshot}) : super(key: key);
+  final Weather snapshot;
   @override
   State<TodayView> createState() => _TodayViewState();
 }
 
 class _TodayViewState extends State<TodayView> {
-  late Future myFuture;
-  late WeatherFactory ws;
-  late List<Weather> _data;
-  double? latitude;
-  double? longitude;
-  Position? position;
-
   String todayDate = DateFormat('EEEE, d MMM, yyyy').format(DateTime.now());
 
   @override
   void initState() {
     super.initState();
-    myFuture = queryWeatherGeolocator();
-    ws = WeatherFactory(_kKye);
   }
 
   @override
   void dispose() {
     super.dispose();
-    queryWeatherGeolocator();
-  }
-
-  Future<List<Weather>> queryWeatherGeolocator() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      await Geolocator.openAppSettings();
-      await Geolocator.openLocationSettings();
-      return Future.error('Location services are disabled.');
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        await Geolocator.openAppSettings();
-        await Geolocator.openLocationSettings();
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      await Geolocator.openAppSettings();
-      await Geolocator.openLocationSettings();
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
-    }
-    position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-
-    latitude = position!.latitude;
-    longitude = position!.longitude;
-
-    Weather weather = await ws.currentWeatherByLocation(latitude!, longitude!);
-    setState(() {
-      _data = [weather];
-    });
-    return _data;
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      builder: (context, AsyncSnapshot snapshot) {
-        if (snapshot.connectionState == ConnectionState.active &&
-            !snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.connectionState == ConnectionState.done &&
-            snapshot.hasError) {
-          return Center(child: Text(snapshot.error.toString()));
-        }
-        return ListView.builder(
-          padding: const EdgeInsets.all(8),
-          itemCount: snapshot.data.length,
-          itemBuilder: (BuildContext context, int index) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Text(
-                    todayDate,
-                    style: const TextStyle(
-                      fontSize: 20,
+    Size size = MediaQuery.of(context).size;
+    String iconUrl = "http://openweathermap.org/img/w/" +
+        widget.snapshot.weatherIcon.toString() +
+        '.png';
+    String temp = widget.snapshot.temperature.toString();
+    String areaName = widget.snapshot.areaName.toString();
+    String weatherMain = widget.snapshot.weatherMain.toString();
+    String tempMin = widget.snapshot.tempMin.toString();
+    String tempMax = widget.snapshot.tempMax.toString();
+    String tempFeelsLike = widget.snapshot.tempFeelsLike.toString();
+    String humidity = widget.snapshot.humidity.toString();
+    String pressure = widget.snapshot.pressure.toString();
+    String windSpeed = widget.snapshot.windSpeed.toString();
+    String cloudiness = widget.snapshot.cloudiness.toString();
+    String windDegree = widget.snapshot.windDegree.toString();
+    return Scaffold(
+      appBar: const PreferredSize(
+        preferredSize: Size.fromHeight(70),
+        child: TodayAppBar(),
+      ),
+      body: Center(
+        child: Container(
+          height: size.height,
+          width: size.height,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+          ),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: size.height * 0.03,
+                    ),
+                    child: Align(
+                      child: Text(
+                        areaName,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 50,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: size.height * 0.005,
+                    ),
+                    child: Align(
+                      child: Text(
+                        'Today - ' + todayDate, //day
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: size.height * 0.01,
+                    ),
+                    child: Align(
+                      child: Image.network(
+                        iconUrl,
+                        scale: 20,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: size.height * 0.03,
+                    ),
+                    child: Align(
+                      child: Text(
+                        temp,
+                        style: const TextStyle(
+                            color: Colors.blue,
+                            fontSize: 40,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: size.width * 0.25),
+                    child: const Divider(
                       color: Colors.black,
-                      fontWeight: FontWeight.normal,
                     ),
                   ),
-                ),
-                const SizedBox(
-                  height: 15,
-                ),
-                const Icon(
-                  CupertinoIcons.snow,
-                  size: 120,
-                  color: Colors.blueGrey,
-                ),
-                Center(
-                  child: Text(
-                    snapshot.data[index].temperature.toString(),
-                    style: const TextStyle(
-                        color: Colors.blueAccent,
-                        fontSize: 30,
-                        fontWeight: FontWeight.normal),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: size.height * 0.005,
+                    ),
+                    child: Align(
+                      child: Text(
+                        weatherMain,
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(
-                  width: 15,
-                ),
-                Center(
-                  child: Text(
-                    snapshot.data[index].areaName.toString() +
-                        ' ' +
-                        snapshot.data[index].country.toString(),
-                    style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 20,
-                        fontWeight: FontWeight.normal),
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: size.height * 0.03,
+                      bottom: size.height * 0.01,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          tempMin,
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const Text(
+                          '/',
+                          style: TextStyle(
+                            color: Colors.black54,
+                            fontSize: 15,
+                          ),
+                        ),
+                        Text(
+                          tempMax,
+                          style: const TextStyle(
+                            color: Colors.blue,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(
-                  width: 20,
-                ),
-                const Divider(thickness: 5, color: Colors.black26),
-                Wrap(
-                  spacing: 30,
-                  direction: Axis.vertical,
-                  children: [
-                    SizedBox(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            CupertinoIcons.drop,
-                            color: Colors.blueGrey,
-                            size: 60,
-                          ),
-                          const SizedBox(
-                            width: 30,
-                          ),
-                          Text(
-                            'Humidity: ' +
-                                snapshot.data[index].humidity.toString() +
-                                ' %',
-                            style: const TextStyle(
-                                color: Colors.blueGrey,
-                                fontSize: 30,
-                                fontWeight: FontWeight.normal),
-                          ),
-                        ],
+                  Padding(
+                    padding: EdgeInsets.only(
+                      top: size.height * 0.01,
+                      bottom: size.height * 0.01,
+                    ),
+                    child: Align(
+                      child: Text(
+                        'Feels like ' + tempFeelsLike,
+                        style: const TextStyle(
+                          color: Colors.black54,
+                          fontSize: 15,
+                        ),
                       ),
                     ),
-                    SizedBox(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            CupertinoIcons.cloud,
-                            color: Colors.blueGrey,
-                            size: 60,
-                          ),
-                          const SizedBox(
-                            width: 30,
-                          ),
-                          Text(
-                            'Pressure: ' +
-                                snapshot.data[index].pressure.toString() +
-                                ' hPa',
-                            style: const TextStyle(
-                                color: Colors.blueGrey,
-                                fontSize: 30,
-                                fontWeight: FontWeight.normal),
-                          ),
-                        ],
-                      ),
+                  ),
+                  Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: size.width * 0.25),
+                    child: const Divider(
+                      color: Colors.black,
                     ),
-                    SizedBox(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            CupertinoIcons.speedometer,
-                            color: Colors.blueGrey,
-                            size: 60,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: buildItems(
+                            humidity + '%',
+                            CupertinoIcons.cloud_rain,
+                            size,
                           ),
-                          const SizedBox(
-                            width: 30,
-                          ),
-                          Text(
-                            'Wind speed: ' +
-                                snapshot.data[index].windSpeed.toString() +
-                                ' km/h',
-                            style: const TextStyle(
-                                color: Colors.blueGrey,
-                                fontSize: 30,
-                                fontWeight: FontWeight.normal),
-                          ),
-                        ],
-                      ),
+                        ),
+                        Expanded(
+                          child: buildItems(pressure + ' hPa',
+                              CupertinoIcons.speedometer, size),
+                        ),
+                        Expanded(
+                          child: buildItems(
+                              windSpeed + ' km/h', CupertinoIcons.wind, size),
+                        ),
+                        Expanded(
+                          child: buildItems(
+                              cloudiness + '%', CupertinoIcons.cloud, size),
+                        ),
+                        Expanded(
+                          child: buildItems(
+                              windDegree + '˚', CupertinoIcons.wind_snow, size),
+                        ),
+                      ],
                     ),
-                    SizedBox(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            CupertinoIcons.cloud,
-                            color: Colors.blueGrey,
-                            size: 60,
-                          ),
-                          const SizedBox(
-                            width: 30,
-                          ),
-                          Text(
-                            'Weather main: ' +
-                                snapshot.data[index].weatherMain.toString(),
-                            style: const TextStyle(
-                                color: Colors.blueGrey,
-                                fontSize: 30,
-                                fontWeight: FontWeight.normal),
-                          ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            CupertinoIcons.compass,
-                            color: Colors.blueGrey,
-                            size: 60,
-                          ),
-                          const SizedBox(
-                            width: 30,
-                          ),
-                          Text(
-                            'Wether description: ' +
-                                snapshot.data[index].weatherDescription
-                                    .toString(),
-                            style: const TextStyle(
-                                color: Colors.blueGrey,
-                                fontSize: 30,
-                                fontWeight: FontWeight.normal),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            );
-          },
-        );
-      },
-      future: myFuture,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
+}
+
+Widget buildItems(String data, IconData weatherIcon, size) {
+  return Padding(
+    padding: EdgeInsets.all(size.width * 0.025),
+    child: Column(
+      children: [
+        Row(
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: size.height * 0.005,
+              ),
+              child: Icon(
+                weatherIcon,
+                color: Colors.black,
+                size: size.height * 0.04,
+              ),
+            ),
+          ],
+        ),
+        Text(
+          data,
+          style: TextStyle(
+            color: Colors.black26,
+            fontSize: size.height * 0.02,
+          ),
+        ),
+      ],
+    ),
+  );
 }
